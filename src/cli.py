@@ -8,9 +8,20 @@ from .container.docker_manager import DockerManager
 from .logs.log_analyzer import LogAnalyzer
 from .infrastructure.provisioner import InfrastructureProvisioner
 from .remote.ssh_manager import SSHManager
+from .version import __version__
 
 app = typer.Typer(help="OpsZen - A comprehensive toolkit for system monitoring, container management, and more.")
 console = Console()
+
+def version_callback(value: bool):
+    if value:
+        console.print(f"OpsZen version: {__version__}")
+        raise typer.Exit()
+
+@app.callback(invoke_without_command=True)
+def main(version: Optional[bool] = typer.Option(None, "--version", "-v", callback=version_callback, is_eager=True, help="Show the version and exit.")):
+    """OpsZen - A comprehensive toolkit for system monitoring, container management, and more."""
+    pass
 
 # Create sub-applications for each module
 monitor_app = typer.Typer(help="System monitoring commands")
