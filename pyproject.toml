@@ -1,0 +1,36 @@
+[project]
+name = "opszen"
+version = "0.1.0"
+description = "A comprehensive collection of Python-based DevOps tools"
+authors = [
+    { name = "TianaNanta", email = "andrianjakananta@gmail.com" }
+]
+dependencies = [
+    "psutil>=5.9.0",
+    "docker>=6.1.2",
+    "boto3>=1.28.0",
+    "rich>=13.3.5",
+    "pyyaml>=6.0.1",
+    "python-dotenv>=1.0.0",
+    "typer>=0.9.0",
+    "paramiko>=3.3.1",
+    "scp>=0.14.5",
+    "asyncssh>=2.14.0",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[project.scripts]
+devops = "src.cli:app"
+opszen = "src.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

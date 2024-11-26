@@ -1,0 +1,24 @@
+---
+ec2_instances:
+  - name: web-server
+    image_id: ami-0735c191cf914754d  # Amazon Linux 2 in us-west-2
+    instance_type: t2.micro
+    key_name: your-key-pair
+    security_group_ids:
+      - sg-xxxxxxxx
+    subnet_id: subnet-xxxxxxxx
+
+  - name: application-server
+    image_id: ami-0735c191cf914754d
+    instance_type: t2.small
+    key_name: your-key-pair
+    security_group_ids:
+      - sg-xxxxxxxx
+    subnet_id: subnet-xxxxxxxx
+
+s3_buckets:
+  - name: my-application-logs
+    region: us-west-2
+  
+  - name: my-application-backups
+    region: us-west-2
