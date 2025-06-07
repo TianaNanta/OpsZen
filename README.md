@@ -184,8 +184,8 @@ To set up the development environment:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/opszen.git
-cd opszen
+git clone https://github.com/TianaNanta/OpsZen.git
+cd OpsZen
 
 # Create a virtual environment and install dependencies
 uv venv
