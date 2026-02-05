@@ -301,11 +301,11 @@ case $MODE in
         ;;
     unit)
         print_header "Running Unit Tests"
-        CMD="pytest tests/unit/ -m unit $PYTEST_ARGS"
+        CMD="pytest tests/unit/ $PYTEST_ARGS"
         ;;
     integration)
         print_header "Running Integration Tests"
-        CMD="pytest tests/integration/ -m integration $PYTEST_ARGS"
+        CMD="pytest tests/integration/ $PYTEST_ARGS"
         ;;
     docker)
         print_header "Running Docker Tests"
