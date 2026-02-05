@@ -86,9 +86,48 @@ check_pytest() {
     fi
 }
 
+# Check if virtual environment is activated, create/activate if needed
+ensure_venv() {
+    print_header "Checking Virtual Environment"
+
+    # Check if already in a virtual environment
+    if [ -n "$VIRTUAL_ENV" ]; then
+        print_success "Virtual environment already activated: $VIRTUAL_ENV"
+        return 0
+    fi
+
+    # Check if .venv exists
+    if [ ! -d ".venv" ]; then
+        print_warning "Virtual environment not found. Creating..."
+        python3 -m venv .venv
+        if [ $? -ne 0 ]; then
+            print_error "Failed to create virtual environment"
+            exit 1
+        fi
+        print_success "Virtual environment created"
+    fi
+
+    # Activate the virtual environment
+    print_warning "Activating virtual environment..."
+    if [ -f ".venv/bin/activate" ]; then
+        source .venv/bin/activate
+        print_success "Virtual environment activated: $VIRTUAL_ENV"
+    elif [ -f ".venv/Scripts/activate" ]; then
+        # Windows Git Bash
+        source .venv/Scripts/activate
+        print_success "Virtual environment activated: $VIRTUAL_ENV"
+    else
+        print_error "Could not find activation script"
+        exit 1
+    fi
+}
+
 # Install test dependencies
 install_deps() {
     print_header "Installing Test Dependencies"
+
+    # Ensure venv is active
+    ensure_venv
 
     if [ -f "tests/requirements-test.txt" ]; then
         pip install -r tests/requirements-test.txt
@@ -161,11 +200,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         install)
             install_deps
-            shift
+            exit 0
             ;;
         clean)
             clean_artifacts
-            shift
+            exit 0
             ;;
         markers)
             list_markers
@@ -247,6 +286,9 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Ensure virtual environment is set up and activated
+ensure_venv
 
 # Check if pytest is available
 check_pytest

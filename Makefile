@@ -22,17 +22,16 @@ help: ## Show this help message
 
 install: ## Install production dependencies
 	@echo "$(BLUE)Installing production dependencies...$(NC)"
-	pip install -e .
+	@if [ ! -d ".venv" ]; then python3 -m venv .venv; fi
+	@bash -c "source .venv/bin/activate && pip install -e ."
 
 install-dev: ## Install development dependencies (includes tests)
 	@echo "$(BLUE)Installing development dependencies...$(NC)"
-	pip install -e .
-	pip install -r tests/requirements-test.txt
+	@./run_tests.sh install
 	@echo "$(GREEN)✓ Development environment ready$(NC)"
 
 install-test: ## Install only test dependencies
-	@echo "$(BLUE)Installing test dependencies...$(NC)"
-	pip install -r tests/requirements-test.txt
+	@./run_tests.sh install
 
 # Testing targets
 test: ## Run all tests

@@ -4,6 +4,7 @@ Shared pytest fixtures and configuration for OpsZen test suite.
 """
 
 import os
+import sys
 import tempfile
 from pathlib import Path
 from typing import Dict, Generator
