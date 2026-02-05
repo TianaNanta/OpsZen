@@ -8,8 +8,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from logs.log_analyzer import LogAnalyzer
-from logs.sample_logs import SampleLogGenerator
+from src.logs.log_analyzer import LogAnalyzer
+from src.logs.sample_logs import SampleLogGenerator
 
 
 def test_sample_generation():
