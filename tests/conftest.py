@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Dict, Generator
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -57,14 +57,14 @@ def pytest_configure(config):
         venv_path = get_venv_path()
         project_venv = get_project_venv_path()
 
-        print(f"✓ Virtual environment is active")
+        print("✓ Virtual environment is active")
         print(f"  Location: {venv_path}")
 
         # Check if it's the project's venv
         if Path(venv_path) == project_venv:
-            print(f"✓ Using project virtual environment")
+            print("✓ Using project virtual environment")
         else:
-            print(f"⚠ Using a different virtual environment")
+            print("⚠ Using a different virtual environment")
             print(f"  Project venv: {project_venv}")
             print(f"  Current venv: {venv_path}")
 

@@ -116,7 +116,7 @@ class InfrastructureProvisioner:
     def provision_from_yaml(self, yaml_file: str):
         """Provision infrastructure from a YAML configuration file."""
         try:
-            with open(yaml_file, "r") as f:
+            with open(yaml_file) as f:
                 config = yaml.safe_load(f)
 
             # Process EC2 instances

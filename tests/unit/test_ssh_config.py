@@ -5,7 +5,7 @@ Unit tests for SSHConfig module.
 
 import configparser
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import pytest
 

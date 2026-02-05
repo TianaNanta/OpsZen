@@ -3,10 +3,8 @@
 Unit tests for InfrastructureProvisioner module.
 """
 
-from datetime import datetime
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
-import boto3
 import pytest
 
 from src.infrastructure.provisioner import InfrastructureProvisioner

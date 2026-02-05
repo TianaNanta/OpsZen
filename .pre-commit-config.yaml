@@ -1,0 +1,69 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+# See https://github.com/j178/prek for prek usage
+
+repos:
+  # Ruff - Fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi]
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Pre-commit hooks for basic checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # Prevent giant files from being committed
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      # Check for files that would conflict in case-insensitive filesystems
+      - id: check-case-conflict
+      # Ensure that a file is either empty, or ends with one newline
+      - id: end-of-file-fixer
+      # Trims trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      # Check for debugger imports and breakpoints
+      - id: debug-statements
+      # Check for merge conflicts
+      - id: check-merge-conflict
+      # Check YAML files
+      - id: check-yaml
+        args: [--unsafe]
+      # Check TOML files
+      - id: check-toml
+      # Check JSON files
+      - id: check-json
+      # Prevent adding large files
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+# Configuration
+default_language_version:
+  python: python3
+
+# Run pre-commit on all files
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ""
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

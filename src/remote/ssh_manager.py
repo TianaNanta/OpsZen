@@ -127,13 +127,10 @@ class SSHManager:
             if transport is None:
                 self.console.print("[red]Not connected to any host[/red]")
                 return False
-            with SCPClient(transport) as scp:
-                with Progress() as progress:
-                    task = progress.add_task(
-                        f"[cyan]Uploading {local_path}...", total=None
-                    )
-                    scp.put(local_path, remote_path, recursive=True)
-                    progress.update(task, completed=100)
+            with SCPClient(transport) as scp, Progress() as progress:
+                task = progress.add_task(f"[cyan]Uploading {local_path}...", total=None)
+                scp.put(local_path, remote_path, recursive=True)
+                progress.update(task, completed=100)
             self.console.print(
                 f"[green]Successfully uploaded {local_path} to {remote_path}[/green]"
             )
@@ -149,13 +146,12 @@ class SSHManager:
             if transport is None:
                 self.console.print("[red]Not connected to any host[/red]")
                 return False
-            with SCPClient(transport) as scp:
-                with Progress() as progress:
-                    task = progress.add_task(
-                        f"[cyan]Downloading {remote_path}...", total=None
-                    )
-                    scp.get(remote_path, local_path, recursive=True)
-                    progress.update(task, completed=100)
+            with SCPClient(transport) as scp, Progress() as progress:
+                task = progress.add_task(
+                    f"[cyan]Downloading {remote_path}...", total=None
+                )
+                scp.get(remote_path, local_path, recursive=True)
+                progress.update(task, completed=100)
             self.console.print(
                 f"[green]Successfully downloaded {remote_path} to {local_path}[/green]"
             )
@@ -225,7 +221,7 @@ class SSHManager:
     ) -> Dict[str, Union[int, str]]:
         """Execute a local script on the remote host."""
         try:
-            with open(script_path, "r") as f:
+            with open(script_path) as f:
                 script_content = f.read()
 
             self.console.print(f"[cyan]Executing script: {script_path}[/cyan]")

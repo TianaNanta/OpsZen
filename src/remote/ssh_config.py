@@ -23,7 +23,7 @@ class SSHConfig:
         ssh_config_path = Path.home() / ".ssh" / "config"
         if ssh_config_path.exists():
             try:
-                with open(ssh_config_path, "r") as f:
+                with open(ssh_config_path) as f:
                     self.config.parse(f)
                 self.console.print(
                     f"[dim]Loaded SSH config from {ssh_config_path}[/dim]"

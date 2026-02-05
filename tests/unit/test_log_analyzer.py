@@ -4,9 +4,6 @@ Unit tests for LogAnalyzer module.
 """
 
 import json
-import tempfile
-from datetime import datetime
-from pathlib import Path
 
 import pytest
 
@@ -184,7 +181,7 @@ class TestLogAnalyzer:
         )
 
         assert output_file.exists()
-        with open(output_file, "r") as f:
+        with open(output_file) as f:
             data = json.load(f)
             assert isinstance(data, list)
             assert len(data) > 0

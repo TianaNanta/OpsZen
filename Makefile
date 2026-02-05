@@ -92,25 +92,32 @@ test-monitoring: ## Run monitoring tests
 	./run_tests.sh monitoring
 
 # Code quality targets
-lint: ## Run linters (flake8, pylint)
-	@echo "$(BLUE)Running linters...$(NC)"
-	@flake8 src tests --max-line-length=100 || true
-	@pylint src --disable=all --enable=E,F || true
+lint: ## Run ruff linter with auto-fix
+	@echo "$(BLUE)Running ruff linter...$(NC)"
+	@./format.sh lint
 	@echo "$(GREEN)✓ Linting complete$(NC)"
 
-format: ## Format code with black and isort
-	@echo "$(BLUE)Formatting code...$(NC)"
-	@black src tests
-	@isort src tests
+format: ## Format code with ruff
+	@echo "$(BLUE)Formatting code with ruff...$(NC)"
+	@./format.sh format
 	@echo "$(GREEN)✓ Code formatted$(NC)"
 
-check: ## Run all checks (lint, type check, format check)
+check: ## Run all checks (format check, lint check)
 	@echo "$(BLUE)Running all checks...$(NC)"
-	@black --check src tests
-	@isort --check-only src tests
-	@flake8 src tests --max-line-length=100
-	@mypy src --ignore-missing-imports || true
+	@./format.sh check
 	@echo "$(GREEN)✓ All checks passed$(NC)"
+
+lint-check: ## Check linting without making changes
+	@echo "$(BLUE)Checking linting...$(NC)"
+	@./format.sh lint-check
+
+format-check: ## Check formatting without making changes
+	@echo "$(BLUE)Checking formatting...$(NC)"
+	@ruff format --check .
+
+stats: ## Show linting statistics
+	@echo "$(BLUE)Generating linting statistics...$(NC)"
+	@./format.sh stats
 
 type-check: ## Run type checking with mypy
 	@echo "$(BLUE)Running type checks...$(NC)"
@@ -156,21 +163,38 @@ run-logs: ## Run log analyzer sample
 	@echo "$(BLUE)Running log analyzer...$(NC)"
 	python -m src.logs.sample_logs
 
-# Git hooks
-hooks: ## Install git hooks
-	@echo "$(BLUE)Installing git hooks...$(NC)"
-	@mkdir -p .git/hooks
-	@echo "#!/bin/bash\nmake test-unit" > .git/hooks/pre-commit
-	@chmod +x .git/hooks/pre-commit
-	@echo "$(GREEN)✓ Git hooks installed$(NC)"
+# Prek (pre-commit) targets
+precommit: ## Run prek on staged files
+	@echo "$(BLUE)Running prek hooks...$(NC)"
+	@./precommit.sh run
+
+precommit-all: ## Run prek on all files
+	@echo "$(BLUE)Running prek on all files...$(NC)"
+	@./precommit.sh all
+
+precommit-install: ## Install prek hooks
+	@echo "$(BLUE)Installing prek hooks...$(NC)"
+	@./precommit.sh install
+
+precommit-update: ## Update prek hooks
+	@echo "$(BLUE)Updating prek hooks...$(NC)"
+	@./precommit.sh update
+
+# Git hooks (legacy - use precommit-install instead)
+hooks: precommit-install ## Install git hooks (alias for precommit-install)
 
 # CI/CD targets
-ci: clean install-dev lint test-coverage ## Run CI pipeline locally
+ci: clean install-dev format-check lint-check test-coverage ## Run CI pipeline locally
 	@echo "$(GREEN)✓ CI pipeline complete$(NC)"
 
 # Quick development cycle
 quick: format test-unit ## Format code and run quick tests
 	@echo "$(GREEN)✓ Quick check complete$(NC)"
+
+fix: ## Auto-fix all linting and formatting issues
+	@echo "$(BLUE)Auto-fixing code...$(NC)"
+	@./format.sh format
+	@echo "$(GREEN)✓ All fixes applied$(NC)"
 
 # Build targets
 build: ## Build distribution packages

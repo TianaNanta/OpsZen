@@ -236,3 +236,98 @@ cd OpsZen
 uv venv
 source .venv/bin/activate
 uv sync
+
+## Development Setup
+
+This project uses modern Python development tools for code quality and consistency.
+
+### Code Quality Tools
+
+- **[Ruff](https://github.com/astral-sh/ruff)** - Fast Python linter and formatter (replaces Black, isort, Flake8)
+- **[Pre-commit](https://pre-commit.com/)** - Git hooks for automated code checks
+- **[Prek](https://github.com/j178/prek)** - Enhanced pre-commit CLI
+
+### Quick Start for Contributors
+
+```bash
+# 1. Install development dependencies
+make install-dev
+
+# 2. Install pre-commit hooks
+make precommit-install
+
+# 3. Format and lint code
+make format
+
+# 4. Run tests
+make test
+```
+
+### Common Development Commands
+
+```bash
+# Code formatting and linting
+make format              # Format code with ruff
+make lint                # Lint with auto-fix
+make check               # Check without changes
+
+# Pre-commit hooks
+make precommit           # Run on staged files
+make precommit-all       # Run on all files
+
+# Testing
+make test                # Run all tests
+make test-unit           # Run unit tests only
+make test-coverage       # Run with coverage report
+
+# Quick development cycle
+make quick               # Format + fast tests
+make fix                 # Auto-fix all issues
+make ci                  # Run full CI pipeline locally
+```
+
+### Helper Scripts
+
+```bash
+./format.sh              # Ruff formatting/linting
+./precommit.sh           # Pre-commit hook runner
+./run_tests.sh           # Test runner with venv support
+```
+
+### Documentation
+
+- [PRECOMMIT_SETUP.md](./PRECOMMIT_SETUP.md) - Complete pre-commit and ruff setup guide
+- [QUICK_REFERENCE_PRECOMMIT.md](./QUICK_REFERENCE_PRECOMMIT.md) - Quick command reference
+- [TESTING.md](./TESTING.md) - Testing documentation
+- [TEST_FIX_SUMMARY.md](./TEST_FIX_SUMMARY.md) - Test suite fixes and improvements
+
+### Running Tests
+
+```bash
+# All tests
+make test
+
+# Specific test categories
+make test-unit           # Unit tests only
+make test-integration    # Integration tests
+make test-fast           # Parallel execution
+
+# Coverage
+make test-coverage       # With coverage report
+make test-report         # Generate HTML report
+
+# Module-specific
+make test-docker         # Docker tests
+make test-ssh            # SSH tests
+make test-logs           # Log analyzer tests
+```
+
+### Code Quality Standards
+
+- Line length: 88 characters (Black compatible)
+- Import sorting: Automatic with ruff
+- Type hints: Recommended for new code
+- Docstrings: Required for public APIs
+- Test coverage: Aim for >70%
+
+---

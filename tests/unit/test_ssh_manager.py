@@ -3,11 +3,8 @@
 Unit tests for SSHManager module.
 """
 
-import os
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, patch
 
-import paramiko
 import pytest
 
 from src.remote.ssh_manager import SSHManager

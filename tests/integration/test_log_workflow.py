@@ -6,9 +6,7 @@ Tests end-to-end functionality of the log analyzer with realistic scenarios.
 """
 
 import json
-import tempfile
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytest
 
@@ -99,7 +97,7 @@ class TestLogAnalysisWorkflow:
         assert output_file.exists()
 
         # Verify exported data
-        with open(output_file, "r") as f:
+        with open(output_file) as f:
             exported_data = json.load(f)
             assert len(exported_data) == len(errors)
 
@@ -331,7 +329,7 @@ class TestLogAnalysisWorkflow:
 
         analyzer.export_filtered_logs(str(output_file), filtered, format="json")
 
-        with open(output_file, "r") as f:
+        with open(output_file) as f:
             exported = json.load(f)
             # Check that timestamps are preserved
             for entry in exported:

@@ -3,10 +3,8 @@
 Unit tests for SystemMonitor module.
 """
 
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-import psutil
 import pytest
 
 from src.monitoring.system_monitor import SystemMonitor
