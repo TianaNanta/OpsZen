@@ -244,6 +244,8 @@ class TestDockerManager:
 
     def test_list_containers_empty(self, docker_manager, mock_docker_client):
         """Test listing containers when none exist."""
+        # Reset the side_effect from conftest.py and set return_value
+        mock_docker_client.containers.list.side_effect = None
         mock_docker_client.containers.list.return_value = []
 
         containers = docker_manager.list_containers()
