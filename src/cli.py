@@ -1,27 +1,43 @@
 #!/usr/bin/env python3
-import typer
-from typing import Optional
 from pathlib import Path
+from typing import Optional
+
+import typer
 from rich.console import Console
-from .monitoring.system_monitor import SystemMonitor
+
 from .container.docker_manager import DockerManager
-from .logs.log_analyzer import LogAnalyzer
 from .infrastructure.provisioner import InfrastructureProvisioner
+from .logs.log_analyzer import LogAnalyzer
+from .monitoring.system_monitor import SystemMonitor
 from .remote.ssh_manager import SSHManager
 from .version import __version__
 
-app = typer.Typer(help="OpsZen - A comprehensive toolkit for system monitoring, container management, and more.")
+app = typer.Typer(
+    help="OpsZen - A comprehensive toolkit for system monitoring, container management, and more."
+)
 console = Console()
+
 
 def version_callback(value: bool):
     if value:
         console.print(f"OpsZen version: {__version__}")
         raise typer.Exit()
 
+
 @app.callback(invoke_without_command=True)
-def main(version: Optional[bool] = typer.Option(None, "--version", "-v", callback=version_callback, is_eager=True, help="Show the version and exit.")):
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        callback=version_callback,
+        is_eager=True,
+        help="Show the version and exit.",
+    ),
+):
     """OpsZen - A comprehensive toolkit for system monitoring, container management, and more."""
     pass
+
 
 # Create sub-applications for each module
 monitor_app = typer.Typer(help="System monitoring commands")
@@ -36,6 +52,7 @@ app.add_typer(logs_app, name="logs")
 app.add_typer(infra_app, name="infra")
 app.add_typer(ssh_app, name="ssh")
 
+
 # System Monitoring Commands
 @monitor_app.command("start")
 def start_monitoring(
@@ -43,8 +60,11 @@ def start_monitoring(
 ):
     """Start continuous system monitoring."""
     monitor = SystemMonitor()
-    console.print(f"[green]Starting system monitoring (interval: {interval}s)...[/green]")
+    console.print(
+        f"[green]Starting system monitoring (interval: {interval}s)...[/green]"
+    )
     monitor.monitor_continuously(interval)
+
 
 @monitor_app.command("snapshot")
 def system_snapshot():
@@ -52,20 +72,26 @@ def system_snapshot():
     monitor = SystemMonitor()
     monitor.display_metrics()
 
+
 # Docker Commands
 @docker_app.command("list")
 def list_containers(
-    all: bool = typer.Option(False, "--all", "-a", help="Show all containers including stopped ones")
+    all: bool = typer.Option(
+        False, "--all", "-a", help="Show all containers including stopped ones"
+    ),
 ):
     """List Docker containers."""
     docker = DockerManager()
     docker.display_containers(all=all)
 
+
 @docker_app.command("create")
 def create_container(
     image: str = typer.Argument(..., help="Docker image name"),
     name: str = typer.Option(None, "--name", "-n", help="Container name"),
-    port: str = typer.Option(None, "--port", "-p", help="Port mapping (host:container)"),
+    port: str = typer.Option(
+        None, "--port", "-p", help="Port mapping (host:container)"
+    ),
 ):
     """Create a new Docker container."""
     docker = DockerManager()
@@ -75,42 +101,111 @@ def create_container(
         ports = {container_port: host_port}
     docker.create_container(image, name=name, ports=ports)
 
+
 @docker_app.command("stop")
 def stop_container(
-    container_id: str = typer.Argument(..., help="Container ID or name")
+    container_id: str = typer.Argument(..., help="Container ID or name"),
 ):
     """Stop a running container."""
     docker = DockerManager()
     docker.stop_container(container_id)
 
+
 @docker_app.command("remove")
 def remove_container(
     container_id: str = typer.Argument(..., help="Container ID or name"),
-    force: bool = typer.Option(False, "--force", "-f", help="Force remove running container")
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Force remove running container"
+    ),
 ):
     """Remove a container."""
     docker = DockerManager()
     docker.remove_container(container_id, force=force)
 
+
 # Log Analysis Commands
 @logs_app.command("analyze")
 def analyze_logs(
-    file_path: Path = typer.Argument(..., help="Path to log file", exists=True)
+    file_path: Path = typer.Argument(..., help="Path to log file", exists=True),
+    max_lines: int = typer.Option(
+        None, "--max-lines", "-n", help="Maximum number of lines to analyze"
+    ),
 ):
     """Analyze a log file and show statistics."""
     analyzer = LogAnalyzer()
+    if max_lines:
+        analyzer.load_logs(str(file_path), max_lines=max_lines)
     analyzer.analyze_logs(str(file_path))
+
 
 @logs_app.command("filter")
 def filter_logs(
     file_path: Path = typer.Argument(..., help="Path to log file", exists=True),
-    level: str = typer.Option(None, "--level", "-l", help="Filter by log level (ERROR, WARNING, INFO)"),
-    start_time: str = typer.Option(None, "--start", help="Start time (YYYY-MM-DD HH:MM:SS)"),
-    end_time: str = typer.Option(None, "--end", help="End time (YYYY-MM-DD HH:MM:SS)")
+    level: str = typer.Option(
+        None, "--level", "-l", help="Filter by log level (ERROR, WARNING, INFO)"
+    ),
+    start_time: str = typer.Option(
+        None, "--start", help="Start time (YYYY-MM-DD HH:MM:SS)"
+    ),
+    end_time: str = typer.Option(None, "--end", help="End time (YYYY-MM-DD HH:MM:SS)"),
+    pattern: str = typer.Option(
+        None, "--pattern", "-p", help="Filter by regex pattern"
+    ),
+    exclude: str = typer.Option(
+        None, "--exclude", "-e", help="Exclude lines matching pattern"
+    ),
+    output: Path = typer.Option(
+        None, "--output", "-o", help="Export filtered results to file"
+    ),
 ):
     """Filter logs based on criteria."""
     analyzer = LogAnalyzer()
-    analyzer.filter_logs(str(file_path), level=level, start_time=start_time, end_time=end_time)
+    filtered = analyzer.filter_logs(
+        str(file_path),
+        level=level,
+        start_time=start_time,
+        end_time=end_time,
+        pattern=pattern,
+        exclude_pattern=exclude,
+    )
+
+    if output:
+        # Determine format from extension
+        format_type = "json"
+        if str(output).endswith(".csv"):
+            format_type = "csv"
+        elif str(output).endswith(".txt") or str(output).endswith(".log"):
+            format_type = "text"
+
+        analyzer.export_filtered_logs(str(output), filtered, format=format_type)
+
+
+@logs_app.command("tail")
+def tail_logs(
+    file_path: Path = typer.Argument(..., help="Path to log file", exists=True),
+    lines: int = typer.Option(10, "--lines", "-n", help="Number of lines to show"),
+    follow: bool = typer.Option(
+        False, "--follow", "-f", help="Follow log file for new entries"
+    ),
+):
+    """Tail a log file (like tail -f)."""
+    analyzer = LogAnalyzer()
+    analyzer.tail_logs(str(file_path), lines=lines, follow=follow)
+
+
+@logs_app.command("export")
+def export_logs(
+    file_path: Path = typer.Argument(..., help="Path to log file", exists=True),
+    output: Path = typer.Argument(..., help="Output file path"),
+    format: str = typer.Option(
+        "json", "--format", help="Export format (json, csv, text)"
+    ),
+):
+    """Export logs to different formats."""
+    analyzer = LogAnalyzer()
+    analyzer.load_logs(str(file_path))
+    analyzer.export_filtered_logs(str(output), format=format)
+
 
 # Infrastructure Commands
 @infra_app.command("list-ec2")
@@ -119,11 +214,13 @@ def list_ec2():
     provisioner = InfrastructureProvisioner()
     provisioner.list_instances()
 
+
 @infra_app.command("list-s3")
 def list_s3():
     """List S3 buckets."""
     provisioner = InfrastructureProvisioner()
     provisioner.list_s3_buckets()
+
 
 @infra_app.command("create-ec2")
 def create_ec2(
@@ -138,26 +235,31 @@ def create_ec2(
         "name": name,
         "image_id": image_id,
         "instance_type": instance_type,
-        "key_name": key_name
+        "key_name": key_name,
     }
     provisioner.create_ec2_instance(config)
+
 
 @infra_app.command("create-s3")
 def create_s3(
     name: str = typer.Argument(..., help="Bucket name"),
-    region: str = typer.Option("us-west-2", help="AWS region")
+    region: str = typer.Option("us-west-2", help="AWS region"),
 ):
     """Create an S3 bucket."""
     provisioner = InfrastructureProvisioner()
     provisioner.create_s3_bucket(name, region)
 
+
 @infra_app.command("provision")
 def provision_infrastructure(
-    config_file: Path = typer.Argument(..., help="YAML configuration file", exists=True)
+    config_file: Path = typer.Argument(
+        ..., help="YAML configuration file", exists=True
+    ),
 ):
     """Provision infrastructure from YAML configuration."""
     provisioner = InfrastructureProvisioner()
     provisioner.provision_from_yaml(str(config_file))
+
 
 # SSH Commands
 @ssh_app.command("connect")
@@ -166,12 +268,13 @@ def ssh_connect(
     username: str = typer.Argument(..., help="SSH username"),
     password: str = typer.Option(None, "--password", "-p", help="SSH password"),
     key_file: Path = typer.Option(None, "--key", "-k", help="SSH private key file"),
-    port: int = typer.Option(22, help="SSH port")
+    port: int = typer.Option(22, help="SSH port"),
 ):
     """Connect to a remote host via SSH."""
     ssh = SSHManager()
     ssh.connect(host, username, password, str(key_file) if key_file else None, port)
     return ssh
+
 
 @ssh_app.command("execute")
 def ssh_execute(
@@ -188,6 +291,7 @@ def ssh_execute(
         ssh.execute_command(command, sudo=sudo)
         ssh.close()
 
+
 @ssh_app.command("upload")
 def ssh_upload(
     host: str = typer.Argument(..., help="Remote host to connect to"),
@@ -202,6 +306,7 @@ def ssh_upload(
     if ssh.connect(host, username, password, str(key_file) if key_file else None):
         ssh.upload_file(str(local_path), remote_path)
         ssh.close()
+
 
 @ssh_app.command("download")
 def ssh_download(
@@ -218,6 +323,7 @@ def ssh_download(
         ssh.download_file(remote_path, str(local_path))
         ssh.close()
 
+
 @ssh_app.command("ls")
 def ssh_list(
     host: str = typer.Argument(..., help="Remote host to connect to"),
@@ -231,6 +337,7 @@ def ssh_list(
     if ssh.connect(host, username, password, str(key_file) if key_file else None):
         ssh.list_directory(remote_path)
         ssh.close()
+
 
 if __name__ == "__main__":
     app()

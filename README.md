@@ -75,11 +75,34 @@ opszen docker remove my-nginx --force
 
 ### Log Analysis
 ```bash
-# Analyze logs
+# Analyze logs with comprehensive statistics
 opszen logs analyze /path/to/logfile.log
+opszen logs analyze /var/log/syslog --max-lines 10000
 
-# Filter logs
-opszen logs filter /path/to/logfile.log --level ERROR --start "2023-01-01 00:00:00"
+# Filter logs by level (ERROR and above)
+opszen logs filter /path/to/logfile.log --level ERROR
+
+# Filter by time range
+opszen logs filter /path/to/logfile.log --start "2024-01-01 00:00:00" --end "2024-01-02 00:00:00"
+
+# Filter by pattern (regex)
+opszen logs filter /path/to/logfile.log --pattern "database.*error"
+
+# Exclude specific patterns
+opszen logs filter /path/to/logfile.log --exclude "DEBUG"
+
+# Combine filters and export results
+opszen logs filter /path/to/logfile.log --level WARNING --pattern "timeout" --output errors.json
+opszen logs filter /path/to/logfile.log --level ERROR --output errors.csv
+
+# Tail logs (like tail -f)
+opszen logs tail /path/to/logfile.log --lines 20
+opszen logs tail /path/to/logfile.log --follow
+
+# Export logs to different formats
+opszen logs export /path/to/logfile.log output.json --format json
+opszen logs export /path/to/logfile.log output.csv --format csv
+opszen logs export /path/to/logfile.log output.txt --format text
 ```
 
 ### Infrastructure Management
