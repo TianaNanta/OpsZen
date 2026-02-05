@@ -261,82 +261,182 @@ def provision_infrastructure(
     provisioner.provision_from_yaml(str(config_file))
 
 
-# SSH Commands
-@ssh_app.command("connect")
-def ssh_connect(
-    host: str = typer.Argument(..., help="Remote host to connect to"),
-    username: str = typer.Argument(..., help="SSH username"),
-    password: str = typer.Option(None, "--password", "-p", help="SSH password"),
-    key_file: Path = typer.Option(None, "--key", "-k", help="SSH private key file"),
-    port: int = typer.Option(22, help="SSH port"),
-):
-    """Connect to a remote host via SSH."""
-    ssh = SSHManager()
-    ssh.connect(host, username, password, str(key_file) if key_file else None, port)
-    return ssh
+# SSH Commands - Redesigned for better UX
 
 
-@ssh_app.command("execute")
-def ssh_execute(
-    host: str = typer.Argument(..., help="Remote host to connect to"),
-    username: str = typer.Argument(..., help="SSH username"),
+# Core command: run (replaces execute)
+@ssh_app.command("run")
+def ssh_run(
+    target: str = typer.Argument(..., help="Host (user@host or saved profile name)"),
     command: str = typer.Argument(..., help="Command to execute"),
+    sudo: bool = typer.Option(False, "--sudo", "-s", help="Run with sudo"),
     password: str = typer.Option(None, "--password", "-p", help="SSH password"),
-    key_file: Path = typer.Option(None, "--key", "-k", help="SSH private key file"),
-    sudo: bool = typer.Option(False, "--sudo", "-s", help="Execute with sudo"),
+    key: Path = typer.Option(None, "--key", "-i", help="SSH private key file"),
+    port: int = typer.Option(None, "--port", "-P", help="SSH port (default: 22)"),
 ):
-    """Execute a command on a remote host."""
+    """Run a command on a remote host (similar to: ssh user@host 'command').
+
+    Examples:
+        opszen ssh run user@server.com "ls -la"
+        opszen ssh run myserver "df -h"
+        opszen ssh run prod-server "systemctl restart nginx" --sudo
+    """
     ssh = SSHManager()
-    if ssh.connect(host, username, password, str(key_file) if key_file else None):
+    user, host = _parse_target(target)
+
+    if ssh.connect(host, user, password, str(key) if key else None, port):
         ssh.execute_command(command, sudo=sudo)
         ssh.close()
 
 
-@ssh_app.command("upload")
-def ssh_upload(
-    host: str = typer.Argument(..., help="Remote host to connect to"),
-    username: str = typer.Argument(..., help="SSH username"),
-    local_path: Path = typer.Argument(..., help="Local file or directory to upload"),
-    remote_path: str = typer.Argument(..., help="Remote destination path"),
+# Simplified copy commands
+@ssh_app.command("copy")
+def ssh_copy(
+    source: str = typer.Argument(..., help="Source (local:path or user@host:path)"),
+    dest: str = typer.Argument(..., help="Destination (local:path or user@host:path)"),
     password: str = typer.Option(None, "--password", "-p", help="SSH password"),
-    key_file: Path = typer.Option(None, "--key", "-k", help="SSH private key file"),
+    key: Path = typer.Option(None, "--key", "-i", help="SSH private key file"),
+    port: int = typer.Option(None, "--port", "-P", help="SSH port"),
 ):
-    """Upload a file or directory to a remote host."""
+    """Copy files to/from remote host (like scp).
+
+    Examples:
+        opszen ssh copy ./file.txt user@server:/tmp/
+        opszen ssh copy user@server:/var/log/app.log ./logs/
+        opszen ssh copy myserver:~/data.txt ./
+    """
     ssh = SSHManager()
-    if ssh.connect(host, username, password, str(key_file) if key_file else None):
-        ssh.upload_file(str(local_path), remote_path)
+
+    # Parse source and destination
+    is_upload = ":" not in source or source.startswith("./") or source.startswith("/")
+
+    if is_upload:
+        # Upload: local to remote
+        user, host = _parse_target(dest.split(":")[0])
+        remote_path = dest.split(":", 1)[1] if ":" in dest else dest
+        local_path = source
+
+        if ssh.connect(host, user, password, str(key) if key else None, port):
+            ssh.upload_file(local_path, remote_path)
+            ssh.close()
+    else:
+        # Download: remote to local
+        user, host = _parse_target(source.split(":")[0])
+        remote_path = source.split(":", 1)[1]
+        local_path = dest
+
+        if ssh.connect(host, user, password, str(key) if key else None, port):
+            ssh.download_file(remote_path, local_path)
+            ssh.close()
+
+
+# Quick commands
+@ssh_app.command("exec")
+def ssh_exec(
+    target: str = typer.Argument(..., help="Host (user@host or profile)"),
+    script: Path = typer.Argument(..., help="Local script file to execute"),
+    sudo: bool = typer.Option(False, "--sudo", "-s", help="Run with sudo"),
+    password: str = typer.Option(None, "--password", "-p", help="SSH password"),
+    key: Path = typer.Option(None, "--key", "-i", help="SSH private key file"),
+):
+    """Execute a local script on remote host.
+
+    Examples:
+        opszen ssh exec user@server deploy.sh
+        opszen ssh exec prod-server backup.sh --sudo
+    """
+    ssh = SSHManager()
+    user, host = _parse_target(target)
+
+    if ssh.connect(host, user, password, str(key) if key else None):
+        ssh.run_script(str(script), sudo=sudo)
         ssh.close()
 
 
-@ssh_app.command("download")
-def ssh_download(
-    host: str = typer.Argument(..., help="Remote host to connect to"),
-    username: str = typer.Argument(..., help="SSH username"),
-    remote_path: str = typer.Argument(..., help="Remote file or directory to download"),
-    local_path: Path = typer.Argument(..., help="Local destination path"),
+@ssh_app.command("shell")
+def ssh_shell(
+    target: str = typer.Argument(..., help="Host (user@host or profile)"),
     password: str = typer.Option(None, "--password", "-p", help="SSH password"),
-    key_file: Path = typer.Option(None, "--key", "-k", help="SSH private key file"),
+    key: Path = typer.Option(None, "--key", "-i", help="SSH private key file"),
+    port: int = typer.Option(None, "--port", "-P", help="SSH port"),
 ):
-    """Download a file or directory from a remote host."""
+    """Start an interactive shell session.
+
+    Examples:
+        opszen ssh shell user@server.com
+        opszen ssh shell myserver
+    """
     ssh = SSHManager()
-    if ssh.connect(host, username, password, str(key_file) if key_file else None):
-        ssh.download_file(remote_path, str(local_path))
+    user, host = _parse_target(target)
+
+    if ssh.connect(host, user, password, str(key) if key else None, port):
+        ssh.interactive_shell()
         ssh.close()
 
 
-@ssh_app.command("ls")
-def ssh_list(
-    host: str = typer.Argument(..., help="Remote host to connect to"),
-    username: str = typer.Argument(..., help="SSH username"),
-    remote_path: str = typer.Argument(".", help="Remote path to list"),
-    password: str = typer.Option(None, "--password", "-p", help="SSH password"),
-    key_file: Path = typer.Option(None, "--key", "-k", help="SSH private key file"),
+# Profile management
+@ssh_app.command("save")
+def ssh_save_profile(
+    name: str = typer.Argument(..., help="Profile name"),
+    target: str = typer.Argument(..., help="Target (user@host:port)"),
+    key: Path = typer.Option(None, "--key", "-i", help="SSH private key file"),
 ):
-    """List contents of a remote directory."""
-    ssh = SSHManager()
-    if ssh.connect(host, username, password, str(key_file) if key_file else None):
-        ssh.list_directory(remote_path)
-        ssh.close()
+    """Save a connection profile for quick access.
+
+    Examples:
+        opszen ssh save prod admin@prod.example.com:22
+        opszen ssh save myserver user@192.168.1.100 --key ~/.ssh/id_rsa
+    """
+    from .remote.ssh_config import SSHConfig
+
+    config = SSHConfig()
+    user, host_port = _parse_target(target)
+
+    if ":" in host_port:
+        host, port_str = host_port.rsplit(":", 1)
+        port = int(port_str)
+    else:
+        host = host_port
+        port = 22
+
+    config.save_profile(name, host, user, port, str(key) if key else None)
+
+
+@ssh_app.command("profiles")
+def ssh_list_profiles():
+    """List all saved connection profiles.
+
+    Example:
+        opszen ssh profiles
+    """
+    from .remote.ssh_config import SSHConfig
+
+    config = SSHConfig()
+    config.list_profiles()
+
+
+@ssh_app.command("delete")
+def ssh_delete_profile(
+    name: str = typer.Argument(..., help="Profile name to delete"),
+):
+    """Delete a saved connection profile.
+
+    Example:
+        opszen ssh delete myserver
+    """
+    from .remote.ssh_config import SSHConfig
+
+    config = SSHConfig()
+    config.delete_profile(name)
+
+
+# Helper function
+def _parse_target(target: str) -> tuple:
+    """Parse user@host format or return (None, target) for profiles."""
+    if "@" in target:
+        parts = target.split("@", 1)
+        return parts[0], parts[1]
+    return None, target
 
 
 if __name__ == "__main__":

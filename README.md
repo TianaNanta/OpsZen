@@ -123,21 +123,43 @@ opszen infra create-s3 my-bucket --region us-west-2
 opszen infra provision config.yaml
 ```
 
-### SSH Remote Management
+### SSH Remote Management (New Intuitive Interface!)
 ```bash
-# Execute commands on remote hosts
-opszen ssh execute example.com username "ls -la" --key ~/.ssh/id_rsa
-opszen ssh execute example.com username "apt update" --sudo --password mypass
+# Save a server profile for quick access
+opszen ssh save prod admin@prod.example.com --key ~/.ssh/id_rsa
+opszen ssh save dev user@192.168.1.100
 
-# File operations
-opszen ssh upload example.com username ./local/file.txt /remote/path/
-opszen ssh download example.com username /remote/file.txt ./local/path/
+# Run commands with SSH KEY
+opszen ssh run user@server.com "ls -la"
+opszen ssh run prod "systemctl restart nginx" --sudo
 
-# Directory operations
-opszen ssh ls example.com username /remote/path/
+# Run commands with PASSWORD (use -p or --password)
+opszen ssh run user@server.com "ls -la" --password mypassword
+opszen ssh run user@server "apt update" --sudo -p mypass
 
-# Multiple commands
-opszen ssh execute example.com username "cd /opt && ./deploy.sh" --key ~/.ssh/id_rsa
+# Copy files with PASSWORD
+opszen ssh copy ./file.txt user@server:/tmp/ --password mypass
+opszen ssh copy user@server:/var/log/app.log ./logs/ -p mypass
+
+# Copy files with SSH key
+opszen ssh copy ./file.txt user@server:/tmp/
+opszen ssh copy prod:~/data.txt ./
+
+# Execute local scripts (with password)
+opszen ssh exec user@server deploy.sh --password mypass
+opszen ssh exec prod backup.sh --sudo -p prodpass
+
+# Interactive shell with password
+opszen ssh shell user@server.com --password mypass
+opszen ssh shell prod -p prodpass
+
+# Manage saved profiles
+opszen ssh profiles              # List all saved profiles
+opszen ssh delete old-server     # Remove a profile
+
+# Password works with ALL commands!
+# See SSH_GUIDE.md for complete documentation
+# See SSH_PASSWORD_AUTH.md for password authentication guide
 ```
 
 ## Project Structure
