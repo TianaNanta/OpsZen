@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 jobs:
@@ -14,133 +14,237 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         exclude:
           # Reduce test matrix size - only test all Python versions on Ubuntu
           - os: macos-latest
-            python-version: '3.8'
+            python-version: "3.8"
           - os: macos-latest
-            python-version: '3.9'
+            python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.10"
           - os: windows-latest
-            python-version: '3.8'
+            python-version: "3.8"
           - os: windows-latest
-            python-version: '3.9'
+            python-version: "3.9"
+          - os: windows-latest
+            python-version: "3.10"
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r tests/requirements-test.txt
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
-    - name: Lint with flake8
-      run: |
-        pip install flake8
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings
-        flake8 src --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Create virtual environment
+        run: |
+          uv venv .venv
 
-    - name: Run unit tests
-      run: |
-        pytest tests/unit/ -v --tb=short --timeout=60
+      - name: Install dependencies (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
 
-    - name: Run integration tests
-      run: |
-        pytest tests/integration/ -v --tb=short --timeout=300
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          .venv\Scripts\activate
+          uv pip install -e ".[dev]"
 
-    - name: Generate coverage report
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      run: |
-        pytest tests/ --cov=src --cov-report=xml --cov-report=term-missing --cov-branch
+      - name: Run unit tests (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          source .venv/bin/activate
+          make test-unit
 
-    - name: Upload coverage to Codecov
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+      - name: Run unit tests (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          source .venv/Scripts/activate
+          ./run_tests.sh unit
+
+      - name: Run integration tests (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          source .venv/bin/activate
+          make test-integration
+
+      - name: Run integration tests (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          source .venv/Scripts/activate
+          ./run_tests.sh integration
+
+      - name: Generate coverage report
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        run: |
+          source .venv/bin/activate
+          make test-coverage
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
   lint:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install linting tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install black isort mypy pylint
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
-    - name: Check code formatting with Black
-      run: |
-        black --check src tests
+      - name: Create virtual environment
+        run: |
+          uv venv .venv
 
-    - name: Check import ordering with isort
-      run: |
-        isort --check-only src tests
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
 
-    - name: Type checking with mypy
-      continue-on-error: true
-      run: |
-        mypy src --ignore-missing-imports
+      - name: Check formatting with ruff
+        run: |
+          source .venv/bin/activate
+          make format-check
 
-    - name: Lint with pylint
-      continue-on-error: true
-      run: |
-        pylint src --disable=all --enable=E,F
+      - name: Check linting with ruff
+        run: |
+          source .venv/bin/activate
+          make lint-check
+
+      - name: Show linting statistics
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+          make stats
 
   security:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install security tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install bandit safety
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
-    - name: Security check with bandit
-      continue-on-error: true
-      run: |
-        bandit -r src -f json -o bandit-report.json || true
-        bandit -r src
+      - name: Create virtual environment
+        run: |
+          uv venv .venv
 
-    - name: Check dependencies with safety
-      continue-on-error: true
-      run: |
-        safety check --json || true
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
+          uv pip install bandit safety
+
+      - name: Security check with bandit
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+          bandit -r src -f json -o bandit-report.json || true
+          bandit -r src
+
+      - name: Check dependencies with safety
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+          safety check --json || true
+
+      - name: Upload bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+          if-no-files-found: ignore
+
+  quick-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Create virtual environment
+        run: |
+          uv venv .venv
+
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
+
+      - name: Run quick check (format + unit tests)
+        run: |
+          source .venv/bin/activate
+          make quick
 
   test-summary:
     runs-on: ubuntu-latest
-    needs: [test, lint, security]
+    needs: [test, lint, security, quick-check]
     if: always()
     steps:
-    - name: Check test results
-      run: |
-        echo "Tests completed"
-        if [ "${{ needs.test.result }}" == "failure" ]; then
-          echo "::error::Tests failed"
-          exit 1
-        fi
+      - name: Check test results
+        run: |
+          echo "Tests completed"
+          echo "Test job: ${{ needs.test.result }}"
+          echo "Lint job: ${{ needs.lint.result }}"
+          echo "Security job: ${{ needs.security.result }}"
+          echo "Quick check job: ${{ needs.quick-check.result }}"
+
+          if [ "${{ needs.test.result }}" == "failure" ]; then
+            echo "::error::Tests failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.lint.result }}" == "failure" ]; then
+            echo "::error::Linting failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.quick-check.result }}" == "failure" ]; then
+            echo "::error::Quick check failed"
+            exit 1
+          fi
+
+          echo "✓ All checks passed!"

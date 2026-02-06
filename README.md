@@ -456,4 +456,62 @@ make test-logs           # Log analyzer tests
 - Docstrings: Required for public APIs
 - Test coverage: Aim for >70%
 
+### Continuous Integration (CI/CD)
+
+The project uses GitHub Actions for automated testing and code quality checks.
+
+#### Available Workflows
+
+1. **Tests** (`.github/workflows/tests.yml`)
+   - Runs on: Push to main/develop, Pull Requests
+   - Matrix testing: Ubuntu, macOS, Windows × Python 3.8-3.12
+   - Jobs: Unit tests, Integration tests, Linting, Security checks
+   - Coverage reporting to Codecov
+
+2. **PR Quick Check** (`.github/workflows/pr-check.yml`)
+   - Runs on: Pull Requests
+   - Fast feedback with `make quick` (format + unit tests)
+   - Linting validation with ruff
+
+3. **CI Pipeline** (`.github/workflows/ci.yml`)
+   - Runs on: Push, Pull Requests, Manual trigger
+   - Full CI pipeline using `make ci`
+   - Optional security and coverage reports
+   - Manual workflow dispatch with options
+
+4. **Nightly Tests** (`.github/workflows/nightly.yml`)
+   - Runs on: Schedule (2 AM UTC daily), Manual trigger
+   - Complete test matrix across all OS/Python combinations
+   - Security audits (bandit, safety, pip-audit)
+   - Test result artifacts
+
+#### Workflow Features
+
+- **Uses `uv`** for fast dependency management
+- **Make commands** for consistency with local development
+- **Caching** for faster builds
+- **Cross-platform** support (Unix and Windows)
+- **Parallel jobs** for faster feedback
+- **Artifact uploads** for test results and coverage
+
+#### Running CI Locally
+
+```bash
+# Run the same checks as CI
+make ci                  # Full CI pipeline
+make quick               # Quick check (PR workflow)
+make test                # All tests
+make lint                # Linting
+make security            # Security checks
+```
+
+#### Badge Status
+
+Add these badges to track build status:
+
+```markdown
+![Tests](https://github.com/TianaNanta/OpsZen/workflows/Tests/badge.svg)
+![CI Pipeline](https://github.com/TianaNanta/OpsZen/workflows/CI%20Pipeline/badge.svg)
+```
+
 ---

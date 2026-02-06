@@ -1,52 +1,28 @@
-# Test dependencies for OpsZen test suite
-# Install with: pip install -r tests/requirements-test.txt
+# DEPRECATED: This file is no longer used
+# OpsZen now uses pyproject.toml with uv for dependency management
 
-# Testing framework
-pytest>=7.4.0
-pytest-cov>=4.1.0
-pytest-asyncio>=0.21.0
-pytest-mock>=3.11.0
-pytest-timeout>=2.1.0
-pytest-xdist>=3.3.0  # For parallel test execution
+# To install test dependencies, use one of the following:
 
-# Code coverage
-coverage>=7.3.0
-coverage[toml]>=7.3.0
+# Option 1: Using uv (recommended)
+# uv pip install -e ".[dev]"
 
-# Mocking and fixtures
-pytest-faker>=2.0.0
-freezegun>=1.2.0  # For mocking datetime
-responses>=0.23.0  # For mocking HTTP requests
+# Option 2: Using make
+# make install-dev
 
-# Testing utilities
-faker>=19.0.0
-hypothesis>=6.82.0  # Property-based testing
+# Option 3: Using pip with pyproject.toml
+# pip install -e ".[dev]"
 
-# Linting and formatting (optional but recommended)
-black>=23.7.0
-flake8>=6.1.0
-mypy>=1.5.0
-pylint>=2.17.0
-isort>=5.12.0
+# All test dependencies are now defined in pyproject.toml under [dependency-groups]
+# See pyproject.toml for the complete list of development dependencies
 
-# Documentation testing
-pytest-doctest-custom>=1.0.0
+# Quick start:
+# 1. Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh
+# 2. Create venv: uv venv .venv
+# 3. Activate: source .venv/bin/activate (Unix) or .venv\Scripts\activate (Windows)
+# 4. Install: uv pip install -e ".[dev]"
+# 5. Run tests: make test
 
-# Performance testing
-pytest-benchmark>=4.0.0
-
-# Test reporting
-pytest-html>=3.2.0
-pytest-json-report>=1.5.0
-
-# All main dependencies (from main project)
-psutil>=5.9.0
-docker>=6.1.2
-boto3>=1.28.0
-rich>=13.3.5
-pyyaml>=6.0.1
-python-dotenv>=1.0.0
-typer>=0.9.0
-paramiko>=3.3.1
-scp>=0.14.5
-asyncssh>=2.14.0
+# For more information, see:
+# - README.md (Development Setup section)
+# - docs/CI_CD.md (CI/CD documentation)
+# - pyproject.toml (Dependency definitions)
