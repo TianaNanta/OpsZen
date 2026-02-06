@@ -31,6 +31,10 @@ print_error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
+print_info() {
+    echo -e "${BLUE}ℹ $1${NC}"
+}
+
 # Help message
 show_help() {
     cat << EOF
@@ -99,7 +103,15 @@ ensure_venv() {
     # Check if .venv exists
     if [ ! -d ".venv" ]; then
         print_warning "Virtual environment not found. Creating..."
-        python3 -m venv .venv
+
+        # Check if uv is available
+        if command -v uv &> /dev/null; then
+            uv venv .venv
+        else
+            print_warning "uv not found, using python3 -m venv as fallback"
+            python3 -m venv .venv
+        fi
+
         if [ $? -ne 0 ]; then
             print_error "Failed to create virtual environment"
             exit 1
@@ -129,13 +141,17 @@ install_deps() {
     # Ensure venv is active
     ensure_venv
 
-    if [ -f "tests/requirements-test.txt" ]; then
-        pip install -r tests/requirements-test.txt
-        print_success "Test dependencies installed"
-    else
-        print_error "tests/requirements-test.txt not found"
+    # Check if uv is available
+    if ! command -v uv &> /dev/null; then
+        print_error "uv not found. Please install uv first:"
+        print_info "curl -LsSf https://astral.sh/uv/install.sh | sh"
         exit 1
     fi
+
+    # Install using pyproject.toml with uv
+    print_info "Installing dependencies with uv..."
+    uv sync --all-groups
+    print_success "Test dependencies installed"
 }
 
 # Clean test artifacts

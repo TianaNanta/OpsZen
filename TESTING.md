@@ -45,11 +45,11 @@ tests/
 ### 1. Installation
 
 ```bash
-# Option 1: Using the test runner
+# Option 1: Using the test runner (recommended)
 ./run_tests.sh install
 
-# Option 2: Using pip directly
-pip install -r tests/requirements-test.txt
+# Option 2: Using uv directly
+uv pip install -e ".[dev]"
 
 # Option 3: Using make
 make install-dev

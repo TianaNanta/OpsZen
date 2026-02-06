@@ -59,7 +59,7 @@ tests/
 ### Prerequisites
 
 - Python 3.8 or higher
-- pip or uv package manager
+- uv package manager (recommended) or pip as fallback
 - Virtual environment (recommended)
 
 ### Installation
@@ -67,11 +67,14 @@ tests/
 1. **Install test dependencies:**
 
    ```bash
-   # Using pip
-   pip install -r tests/requirements-test.txt
+   # Using uv (recommended)
+   uv pip install -e ".[dev]"
 
    # Or use the test runner script
    ./run_tests.sh install
+
+   # Or using make
+   make install-dev
    ```
 
 2. **Verify installation:**
@@ -283,10 +286,10 @@ def test_with_mock_ssh(mock_ssh_client):
    def test_something():
        # Arrange: Set up test data
        analyzer = LogAnalyzer()
-       
+
        # Act: Execute the code being tested
        result = analyzer.parse_line("test input", "format")
-       
+
        # Assert: Verify the results
        assert result["level"] == "INFO"
    ```
@@ -295,7 +298,7 @@ def test_with_mock_ssh(mock_ssh_client):
    ```python
    def test_log_level():
        assert log["level"] == "INFO"
-   
+
    def test_log_message():
        assert log["message"] == "Test"
    ```
@@ -387,23 +390,23 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: Install dependencies
       run: |
-        pip install -r tests/requirements-test.txt
-    
+        uv pip install -e ".[dev]"
+
     - name: Run tests with coverage
       run: |
         pytest tests/ --cov=src --cov-report=xml
-    
+
     - name: Upload coverage
       uses: codecov/codecov-action@v3
 ```

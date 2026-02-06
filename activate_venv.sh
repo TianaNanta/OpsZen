@@ -87,16 +87,15 @@ else
     return 1 2>/dev/null || exit 1
 fi
 
-# Check if pip is available
-if ! command -v pip &> /dev/null; then
-    print_warning "pip not found in virtual environment"
-    print_info "You may need to reinstall the virtual environment"
+# Check if uv is available
+if ! command -v uv &> /dev/null; then
+    print_warning "uv not found"
+    print_info "Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    print_info "Or use pip as fallback: pip install uv"
     return 1 2>/dev/null || exit 1
 fi
 
-# Upgrade pip if needed (suppress output)
-print_info "Ensuring pip is up to date..."
-pip install --upgrade pip --quiet 2>/dev/null
+print_success "uv is available"
 
 # Check if test dependencies are installed
 if [ -f "$SCRIPT_DIR/tests/requirements-test.txt" ]; then
@@ -104,7 +103,7 @@ if [ -f "$SCRIPT_DIR/tests/requirements-test.txt" ]; then
         print_warning "Test dependencies not installed"
         echo ""
         echo "To install test dependencies, run:"
-        echo "  pip install -r tests/requirements-test.txt"
+        echo "  uv pip install -e \".[dev]\""
         echo "Or:"
         echo "  make install-dev"
         echo "  ./run_tests.sh install"

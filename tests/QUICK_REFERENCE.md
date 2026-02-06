@@ -93,12 +93,12 @@ coverage xml
 ## 🛠️ Setup
 
 ```bash
-# Install test dependencies
+# Install test dependencies (recommended)
 ./run_tests.sh install
 # or
 make install-dev
 # or
-pip install -r tests/requirements-test.txt
+uv pip install -e ".[dev]"
 
 # Clean artifacts
 make clean

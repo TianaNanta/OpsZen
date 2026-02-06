@@ -165,14 +165,14 @@ A comprehensive test suite has been successfully created for the OpsZen project 
 ### 1. Install Test Dependencies
 
 ```bash
-# Option 1: Using the test runner
+# Option 1: Using the test runner (recommended)
 ./run_tests.sh install
 
 # Option 2: Using make
 make install-dev
 
-# Option 3: Using pip
-pip install -r tests/requirements-test.txt
+# Option 3: Using uv directly
+uv pip install -e ".[dev]"
 ```
 
 ### 2. Run All Tests
@@ -253,7 +253,7 @@ def test_parse_json_log(self, analyzer):
     """Test parsing JSON log entry."""
     json_line = '{"timestamp": "2024-01-15T10:30:45", "level": "INFO", "message": "test"}'
     parsed = analyzer.parse_json_log(json_line)
-    
+
     assert parsed is not None
     assert parsed["level"] == "INFO"
     assert parsed["message"] == "test"
@@ -265,19 +265,19 @@ def test_parse_json_log(self, analyzer):
 def test_complete_analysis_workflow(self, large_log_file):
     """Test complete workflow: load, filter, analyze, export."""
     analyzer = LogAnalyzer()
-    
+
     # Load logs
     success = analyzer.load_logs(str(large_log_file))
     assert success is True
-    
+
     # Filter for errors
     errors = analyzer.filter_logs(level="ERROR")
     assert len(errors) > 0
-    
+
     # Analyze logs
     stats = analyzer.analyze_logs()
     assert stats["total_lines"] == 1000
-    
+
     # Export results
     output_file = large_log_file.parent / "errors.json"
     export_success = analyzer.export_filtered_logs(errors, str(output_file))

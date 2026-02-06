@@ -22,8 +22,8 @@ help: ## Show this help message
 
 install: ## Install production dependencies
 	@echo "$(BLUE)Installing production dependencies...$(NC)"
-	@if [ ! -d ".venv" ]; then python3 -m venv .venv; fi
-	@bash -c "source .venv/bin/activate && pip install -e ."
+	@if [ ! -d ".venv" ]; then uv venv .venv; fi
+	@bash -c "source .venv/bin/activate && uv pip install -e ."
 
 install-dev: ## Install development dependencies (includes tests)
 	@echo "$(BLUE)Installing development dependencies...$(NC)"
