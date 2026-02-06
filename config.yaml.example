@@ -1,0 +1,291 @@
+# OpsZen Configuration File
+#
+# This file contains default settings for OpsZen.
+# Copy this file to ~/.opszen/config.yaml and customize as needed.
+#
+# Configuration hierarchy (higher priority overrides lower):
+# 1. Command-line arguments (highest priority)
+# 2. Environment variables
+# 3. This config file
+# 4. Built-in defaults (lowest priority)
+
+# ============================================================================
+# AWS Configuration
+# ============================================================================
+aws:
+  # Default AWS profile to use (can be overridden with AWS_PROFILE env var)
+  default_profile: default
+
+  # Default AWS region (can be overridden with AWS_REGION env var)
+  default_region: us-west-2
+
+  # Default EC2 instance type for provisioning
+  default_instance_type: t2.micro
+
+  # Default Amazon Machine Image (AMI) - Amazon Linux 2 in us-west-2
+  default_ami: ami-0c55b159cbfafe1f0
+
+  # API timeout in seconds
+  timeout: 300
+
+  # Maximum number of retries for API calls
+  max_retries: 3
+
+  # Multiple AWS profiles support
+  # Each profile can have its own region, credentials, and settings
+  profiles:
+    default:
+      region: us-west-2
+      instance_type: t2.micro
+
+    production:
+      region: us-east-1
+      instance_type: t3.medium
+
+    development:
+      region: us-west-2
+      instance_type: t2.small
+
+# ============================================================================
+# SSH Configuration
+# ============================================================================
+ssh:
+  # Default SSH user for remote connections
+  default_user: ec2-user
+
+  # Default SSH port
+  default_port: 22
+
+  # Connection timeout in seconds
+  connect_timeout: 10
+
+  # Banner timeout in seconds
+  banner_timeout: 30
+
+  # Authentication timeout in seconds
+  auth_timeout: 30
+
+  # Directory containing SSH keys
+  key_directory: ~/.ssh
+
+  # Path to SSH config file
+  config_file: ~/.ssh/config
+
+  # Whether to read and use ~/.ssh/config
+  use_ssh_config: true
+
+  # Automatically add unknown hosts to known_hosts
+  auto_add_host: false
+
+  # Host-specific SSH configurations
+  # These override the defaults for specific hosts
+  hosts:
+    production-server:
+      hostname: 10.0.1.100
+      user: ubuntu
+      port: 2222
+      identity_file: ~/.ssh/prod_key.pem
+
+    dev-server:
+      hostname: 192.168.1.50
+      user: ec2-user
+      port: 22
+
+# ============================================================================
+# Docker Configuration
+# ============================================================================
+docker:
+  # Docker daemon URL
+  # Examples:
+  #   - unix:///var/run/docker.sock (local Unix socket)
+  #   - tcp://192.168.1.100:2375 (remote Docker daemon)
+  #   - tcp://192.168.1.100:2376 (remote with TLS)
+  daemon_url: unix:///var/run/docker.sock
+
+  # API timeout in seconds
+  timeout: 60
+
+  # Enable TLS verification for remote connections
+  tls_verify: false
+
+  # Path to TLS certificates (required if tls_verify is true)
+  # cert_path: ~/.docker/certs
+
+  # Default Docker network to use
+  default_network: bridge
+
+  # Automatically remove containers when they exit
+  auto_remove: false
+
+  # Image pull policy: always, missing, never
+  pull_policy: missing
+
+  # Default container restart policy: no, always, on-failure, unless-stopped
+  restart_policy: no
+
+  # Registry configuration for private registries
+  registries:
+    # Example private registry
+    # my-registry:
+    #   url: https://registry.example.com
+    #   username: myuser
+    #   # Password should be set via environment variable DOCKER_REGISTRY_PASSWORD
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: INFO
+
+  # Default log format to parse: generic, json, syslog, apache, python
+  format: generic
+
+  # Directory for OpsZen log output
+  output_dir: ~/.opszen/logs
+
+  # Maximum log file size before rotation (e.g., 10MB, 1GB)
+  max_file_size: 10MB
+
+  # Number of backup log files to keep
+  backup_count: 5
+
+  # Enable console output (in addition to file logging)
+  console_output: true
+
+  # Log file naming pattern
+  # Available variables: {date}, {time}, {level}, {module}
+  filename_pattern: "opszen_{date}.log"
+
+# ============================================================================
+# Application Settings
+# ============================================================================
+application:
+  # Main configuration directory
+  config_dir: ~/.opszen
+
+  # Data storage directory
+  data_dir: ~/.opszen/data
+
+  # Cache directory for temporary files
+  cache_dir: ~/.opszen/cache
+
+  # Profiles configuration file
+  profiles_file: ~/.opszen/profiles.yaml
+
+  # Command history file
+  history_file: ~/.opszen/history.log
+
+  # UI theme: auto, light, dark
+  theme: auto
+
+  # Enable colored console output
+  color_output: true
+
+  # Enable verbose output by default
+  verbose: false
+
+  # Enable debug mode (shows stack traces, extra logging)
+  debug: false
+
+  # Check for updates on startup
+  check_updates: true
+
+  # Maximum number of items in command history
+  history_size: 1000
+
+# ============================================================================
+# Monitoring Configuration
+# ============================================================================
+monitoring:
+  # Refresh interval in seconds for system monitoring
+  refresh_interval: 5
+
+  # Number of historical data points to keep in memory
+  history_size: 100
+
+  # Alert thresholds (percentage)
+  alert_thresholds:
+    cpu: 80
+    memory: 85
+    disk: 90
+    network_rx: 100  # MB/s
+    network_tx: 100  # MB/s
+
+  # Metrics to collect
+  collect_metrics:
+    - cpu
+    - memory
+    - disk
+    - network
+    - processes
+
+  # Export metrics to file
+  export_metrics: false
+
+  # Metrics export directory
+  # export_dir: ~/.opszen/metrics
+
+# ============================================================================
+# Infrastructure Provisioning
+# ============================================================================
+infrastructure:
+  # Default tags to apply to all resources
+  default_tags:
+    ManagedBy: OpsZen
+    Environment: development
+
+  # Wait for resources to be ready after creation
+  wait_for_ready: true
+
+  # Timeout for waiting (seconds)
+  wait_timeout: 300
+
+# ============================================================================
+# Security Settings
+# ============================================================================
+security:
+  # Encrypt sensitive data in config files
+  encrypt_secrets: false
+
+  # Path to encryption key (if encrypt_secrets is true)
+  # encryption_key_file: ~/.opszen/encryption.key
+
+  # Require confirmation for destructive operations
+  require_confirmation: true
+
+  # Operations that require confirmation
+  destructive_operations:
+    - delete_instance
+    - delete_bucket
+    - remove_container
+    - delete_ssh_profile
+
+# ============================================================================
+# Plugin Configuration
+# ============================================================================
+plugins:
+  # Enable plugin system
+  enabled: false
+
+  # Plugin directory
+  # plugin_dir: ~/.opszen/plugins
+
+  # Auto-load plugins on startup
+  # auto_load: []
+
+# ============================================================================
+# Advanced Settings
+# ============================================================================
+advanced:
+  # Enable experimental features
+  experimental_features: false
+
+  # Maximum number of parallel operations
+  max_parallel_operations: 5
+
+  # Connection pool size for remote operations
+  connection_pool_size: 10
+
+  # Cache TTL in seconds
+  cache_ttl: 3600
