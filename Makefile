@@ -199,19 +199,19 @@ fix: ## Auto-fix all linting and formatting issues
 # Build targets
 build: ## Build distribution packages
 	@echo "$(BLUE)Building distribution packages...$(NC)"
-	python -m build
+	uv build
 	@echo "$(GREEN)✓ Build complete$(NC)"
 
 publish-test: build ## Publish to Test PyPI
 	@echo "$(BLUE)Publishing to Test PyPI...$(NC)"
-	twine upload --repository testpypi dist/*
+	uv publish --publish-url https://test.pypi.org/legacy/
 
 publish: build ## Publish to PyPI
 	@echo "$(BLUE)Publishing to PyPI...$(NC)"
 	@echo "$(YELLOW)WARNING: This will publish to production PyPI$(NC)"
 	@read -p "Are you sure? [y/N] " -n 1 -r; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		twine upload dist/*; \
+		uv publish; \
 	fi
 
 # Version management
