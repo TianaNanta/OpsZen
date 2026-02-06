@@ -1,6 +1,6 @@
 [project]
 name = "opszen"
-version = "0.8.0"
+version = "0.8.1"
 description = "A comprehensive collection of Python-based DevOps tools"
 authors = [
     { name = "TianaNanta", email = "andrianjakananta@gmail.com" }
