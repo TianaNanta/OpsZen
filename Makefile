@@ -113,7 +113,7 @@ lint-check: ## Check linting without making changes
 
 format-check: ## Check formatting without making changes
 	@echo "$(BLUE)Checking formatting...$(NC)"
-	@ruff format --check .
+	@./format.sh format-check
 
 stats: ## Show linting statistics
 	@echo "$(BLUE)Generating linting statistics...$(NC)"

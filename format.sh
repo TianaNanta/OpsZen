@@ -70,6 +70,13 @@ case "$MODE" in
         echo -e "${GREEN}✓ Lint check complete!${NC}"
         ;;
 
+    format-check)
+        echo -e "${YELLOW}Checking formatting (no changes)...${NC}"
+        ruff format --check "$TARGET"
+        echo ""
+        echo -e "${GREEN}✓ Format check complete!${NC}"
+        ;;
+
     stats)
         echo -e "${YELLOW}Generating linting statistics...${NC}"
         ruff check "$TARGET" --statistics
@@ -84,6 +91,7 @@ Modes:
   check        Check formatting and linting without making changes
   lint         Run linter with auto-fix only (no formatting)
   lint-check   Check linting without making changes
+  format-check Check formatting without making changes
   stats        Show linting statistics
   help         Show this help message
 
